@@ -6,8 +6,9 @@ import java.util.Map;
 
 public class UDPServer {
     private static final int PORT = 9876;
-    private static Map<String, InetAddress> clients = new HashMap<>();
-    private static Map<String, Integer> clientPorts = new HashMap<>();
+    private static final Map<String, InetAddress> clients = new HashMap<>();
+    private static final Map<String, Integer> clientPorts = new HashMap<>();
+    private static final Map<String, String> pseudoToClient = new HashMap<>();
 
     public static void main(String[] args) {
         try (DatagramSocket serverSocket = new DatagramSocket(PORT)) {
@@ -18,47 +19,63 @@ public class UDPServer {
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 serverSocket.receive(receivePacket);
 
-                String message = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                String receivedMessage = new String(receivePacket.getData(), 0, receivePacket.getLength());
                 InetAddress clientAddress = receivePacket.getAddress();
                 int clientPort = receivePacket.getPort();
-
-                // Identifier l'expéditeur
                 String clientId = clientAddress.toString() + ":" + clientPort;
-                if (!clients.containsKey(clientId)) {
+
+                // Enregistrement du pseudo
+                if (receivedMessage.startsWith("REGISTER ")) {
+                    String pseudo = receivedMessage.substring(9).trim();
                     clients.put(clientId, clientAddress);
                     clientPorts.put(clientId, clientPort);
+                    pseudoToClient.put(pseudo, clientId);
+
+                    System.out.println("Nouveau client : " + pseudo + " (" + clientId + ")");
+                    continue;
                 }
 
-                System.out.println("Message reçu de " + clientId + " : " + message);
+                // Gestion des messages publics et privés
+                String pseudo = null;
+                String message = receivedMessage;
 
-                // Vérifier si c'est un message privé (@username message)
+                if (receivedMessage.contains(": ")) {
+                    String[] parts = receivedMessage.split(": ", 2);
+                    pseudo = parts[0];
+                    message = parts[1];
+                }
+
+                System.out.println("Message reçu de " + pseudo + " : " + message);
+
                 if (message.startsWith("@")) {
                     String[] parts = message.split(" ", 2);
                     if (parts.length > 1) {
-                        String targetUser = parts[0].substring(1); // Supprime le "@"
-                        String privateMessage = "Message privé de " + clientId + ": " + parts[1];
+                        String targetUser = parts[0].substring(1);
+                        String privateMessage = "[Message privé de " + pseudo + "] " + parts[1];
 
-                        // Rechercher l'utilisateur cible
-                        for (Map.Entry<String, InetAddress> entry : clients.entrySet()) {
-                            if (entry.getKey().equals(targetUser)) {
-                                byte[] sendData = privateMessage.getBytes();
-                                DatagramPacket sendPacket = new DatagramPacket(
-                                        sendData, sendData.length, entry.getValue(), clientPorts.get(entry.getKey())
-                                );
-                                serverSocket.send(sendPacket);
-                                System.out.println("Message privé envoyé à " + targetUser);
-                                break;
-                            }
+                        // Vérifier si le destinataire existe
+                        if (pseudoToClient.containsKey(targetUser)) {
+                            String targetClientId = pseudoToClient.get(targetUser);
+                            InetAddress targetAddress = clients.get(targetClientId);
+                            int targetPort = clientPorts.get(targetClientId);
+
+                            byte[] sendData = privateMessage.getBytes();
+                            DatagramPacket sendPacket = new DatagramPacket(
+                                    sendData, sendData.length, targetAddress, targetPort);
+                            serverSocket.send(sendPacket);
+
+                            System.out.println("Message privé envoyé à " + targetUser);
+                        } else {
+                            System.out.println("Utilisateur " + targetUser + " introuvable.");
                         }
                     }
                 } else {
-                    // Sinon, message public -> envoyer à tous sauf l'expéditeur
+                    // Message public -> envoyer à tous sauf l'expéditeur
                     for (Map.Entry<String, InetAddress> entry : clients.entrySet()) {
                         if (!entry.getKey().equals(clientId)) {
-                            byte[] sendData = message.getBytes();
+                            byte[] sendData = receivedMessage.getBytes();
                             DatagramPacket sendPacket = new DatagramPacket(
-                                    sendData, sendData.length, entry.getValue(), clientPorts.get(entry.getKey())
-                            );
+                                    sendData, sendData.length, entry.getValue(), clientPorts.get(entry.getKey()));
                             serverSocket.send(sendPacket);
                         }
                     }
