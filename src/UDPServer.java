@@ -35,6 +35,33 @@ public class UDPServer {
                     continue;
                 }
 
+                // Gestion de la commande /list
+                if (receivedMessage.equals("/list")) {
+                    StringBuilder userList = new StringBuilder("Utilisateurs connectés : ");
+                    for (String user : pseudoToClient.keySet()) {
+                        userList.append(user).append(", ");
+                    }
+                    if (userList.length() > 22) {
+                        userList.setLength(userList.length() - 2); // Retirer la dernière virgule
+                    } else {
+                        userList.append("Aucun utilisateur en ligne.");
+                    }
+
+                    byte[] sendData = userList.toString().getBytes();
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
+                    serverSocket.send(sendPacket);
+                    continue;
+                }
+
+                // Gestion de la déconnexion
+                if (receivedMessage.equals("/quit")) {
+                    clients.remove(clientId);
+                    clientPorts.remove(clientId);
+                    pseudoToClient.values().remove(clientId);
+                    System.out.println("Client déconnecté : " + clientId);
+                    continue;
+                }
+
                 // Gestion des messages publics et privés
                 String pseudo = null;
                 String message = receivedMessage;
@@ -53,15 +80,13 @@ public class UDPServer {
                         String targetUser = parts[0].substring(1);
                         String privateMessage = "[Message privé de " + pseudo + "] " + parts[1];
 
-                        // Vérifier si le destinataire existe
                         if (pseudoToClient.containsKey(targetUser)) {
                             String targetClientId = pseudoToClient.get(targetUser);
                             InetAddress targetAddress = clients.get(targetClientId);
                             int targetPort = clientPorts.get(targetClientId);
 
                             byte[] sendData = privateMessage.getBytes();
-                            DatagramPacket sendPacket = new DatagramPacket(
-                                    sendData, sendData.length, targetAddress, targetPort);
+                            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, targetAddress, targetPort);
                             serverSocket.send(sendPacket);
 
                             System.out.println("Message privé envoyé à " + targetUser);
@@ -74,8 +99,7 @@ public class UDPServer {
                     for (Map.Entry<String, InetAddress> entry : clients.entrySet()) {
                         if (!entry.getKey().equals(clientId)) {
                             byte[] sendData = receivedMessage.getBytes();
-                            DatagramPacket sendPacket = new DatagramPacket(
-                                    sendData, sendData.length, entry.getValue(), clientPorts.get(entry.getKey()));
+                            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, entry.getValue(), clientPorts.get(entry.getKey()));
                             serverSocket.send(sendPacket);
                         }
                     }

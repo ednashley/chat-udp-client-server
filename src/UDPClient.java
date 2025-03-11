@@ -20,32 +20,31 @@ public class UDPClient {
             Thread receiveThread = new Thread(() -> {
                 try {
                     byte[] receiveData = new byte[1024];
-                    while (running) { // Écoute uniquement si `running` est vrai
+                    while (running) {
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         socket.receive(receivePacket);
                         String message = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-                        // Efface la ligne en cours pour éviter la superposition
+                        // Effacer la ligne en cours pour éviter la superposition
                         System.out.print("\r" + " ".repeat(50) + "\r");
 
                         System.out.println(message);
                         System.out.print("Vous : ");
                     }
                 } catch (Exception e) {
-                    if (running) { // Si le socket est fermé normalement, on évite l'affichage de l'erreur
+                    if (running) {
                         e.printStackTrace();
                     }
                 }
             });
 
-            receiveThread.start(); // Démarrer l'écoute des messages
+            receiveThread.start();
 
             // Envoyer le pseudo au serveur pour l’enregistrement
             byte[] pseudoData = ("REGISTER " + pseudo).getBytes();
             DatagramPacket pseudoPacket = new DatagramPacket(pseudoData, pseudoData.length, serverAddress, SERVER_PORT);
             socket.send(pseudoPacket);
 
-            // Thread principal pour envoyer les messages
             while (running) {
                 System.out.print("Vous : ");
                 String message = scanner.nextLine();
@@ -53,20 +52,27 @@ public class UDPClient {
                 if (message.equalsIgnoreCase("/quit")) {
                     System.out.println("Déconnexion...");
                     running = false;
+                    byte[] quitData = "/quit".getBytes();
+                    DatagramPacket quitPacket = new DatagramPacket(quitData, quitData.length, serverAddress, SERVER_PORT);
+                    socket.send(quitPacket);
                     break;
                 }
 
-                // Ajouter le pseudo à chaque message
-                String fullMessage = pseudo + ": " + message;
+                if (message.equalsIgnoreCase("/list")) {
+                    byte[] listData = "/list".getBytes();
+                    DatagramPacket listPacket = new DatagramPacket(listData, listData.length, serverAddress, SERVER_PORT);
+                    socket.send(listPacket);
+                    continue;
+                }
 
+                String fullMessage = pseudo + ": " + message;
                 byte[] sendData = fullMessage.getBytes();
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, serverAddress, SERVER_PORT);
                 socket.send(sendPacket);
             }
 
-            // Fermer le socket après l'arrêt du thread
             socket.close();
-            receiveThread.interrupt(); // Arrêter proprement le thread d'écoute
+            receiveThread.interrupt();
 
         } catch (Exception e) {
             e.printStackTrace();
