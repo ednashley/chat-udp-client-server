@@ -1,14 +1,43 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 
+
+
 public class UDPServer {
     private static final int PORT = 9876;
-    private static final Map<String, InetAddress> clients = new HashMap<>();
-    private static final Map<String, Integer> clientPorts = new HashMap<>();
-    private static final Map<String, String> pseudoToClient = new HashMap<>();
+    private static final Map<String, InetAddress> clients = new HashMap<>();      // Associe l'ID d'un client (adresse IP + port) à son adresse IP
+    private static final Map<String, Integer> clientPorts = new HashMap<>();      // Associe l'ID du client à son port UDP
+    private static final Map<String, String> pseudoToClient = new HashMap<>();    // Associe un pseudo au client correspondant
+
+    public static int getOpenedPort(int startPort, int endPort) {
+        for (int port = startPort; port <= endPort; port++) {
+            try {
+                DatagramSocket socket = new DatagramSocket(port);
+                socket.close();
+                return port;
+            } catch (SocketException e) {
+                continue;
+            }
+        }
+        return -1;
+    }
+
+
+    public static void scanUDPPorts(int startPort, int endPort) {
+        for (int port = startPort; port <= endPort; port++) {
+            try {
+                DatagramSocket socket = new DatagramSocket(port);
+                socket.close();
+                System.out.println("Le port " + port + " est ouvert");
+            } catch (SocketException e) {
+                System.out.println("Le port " + port + " est fermé");
+            }
+        }
+    }
 
     public static void main(String[] args) {
         try (DatagramSocket serverSocket = new DatagramSocket(PORT)) {
@@ -41,7 +70,7 @@ public class UDPServer {
                     for (String user : pseudoToClient.keySet()) {
                         userList.append(user).append(", ");
                     }
-                    if (userList.length() > 22) {
+                    if (userList.length() > 24) {
                         userList.setLength(userList.length() - 2); // Retirer la dernière virgule
                     } else {
                         userList.append("Aucun utilisateur en ligne.");
@@ -57,7 +86,8 @@ public class UDPServer {
                 if (receivedMessage.equals("/quit")) {
                     clients.remove(clientId);
                     clientPorts.remove(clientId);
-                    pseudoToClient.values().remove(clientId);
+                    //pseudoToClient.values().remove(clientId);
+                    pseudoToClient.entrySet().removeIf(entry -> entry.getValue().equals(clientId));
                     System.out.println("Client déconnecté : " + clientId);
                     continue;
                 }

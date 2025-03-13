@@ -12,9 +12,15 @@ public class UDPClient {
         try (DatagramSocket socket = new DatagramSocket()) {
             InetAddress serverAddress = InetAddress.getByName(SERVER_ADDRESS);
             Scanner scanner = new Scanner(System.in);
-
             System.out.print("Entrez votre pseudo : ");
             String pseudo = scanner.nextLine();
+
+            System.out.println("\n*** BIENVENUE DANS LE CHAT " + pseudo.toUpperCase() + " ! ***\n");
+            System.out.println("Voici les différentes commandes disponibles :");
+            System.out.println("   o /list : voir les utilisateurs en ligne");
+            System.out.println("   o @pseudo : envoyer un message privé");
+            System.out.println("   o /quit : se déconnecter du chat \n");
+            System.out.println("----- Commencer à discuter ----- \n");
 
             // Thread pour recevoir les messages
             Thread receiveThread = new Thread(() -> {
