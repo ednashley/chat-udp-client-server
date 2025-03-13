@@ -1,43 +1,14 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
-
-
 
 public class UDPServer {
     private static final int PORT = 9876;
     private static final Map<String, InetAddress> clients = new HashMap<>();      // Associe l'ID d'un client (adresse IP + port) à son adresse IP
     private static final Map<String, Integer> clientPorts = new HashMap<>();      // Associe l'ID du client à son port UDP
     private static final Map<String, String> pseudoToClient = new HashMap<>();    // Associe un pseudo au client correspondant
-
-    public static int getOpenedPort(int startPort, int endPort) {
-        for (int port = startPort; port <= endPort; port++) {
-            try {
-                DatagramSocket socket = new DatagramSocket(port);
-                socket.close();
-                return port;
-            } catch (SocketException e) {
-                continue;
-            }
-        }
-        return -1;
-    }
-
-
-    public static void scanUDPPorts(int startPort, int endPort) {
-        for (int port = startPort; port <= endPort; port++) {
-            try {
-                DatagramSocket socket = new DatagramSocket(port);
-                socket.close();
-                System.out.println("Le port " + port + " est ouvert");
-            } catch (SocketException e) {
-                System.out.println("Le port " + port + " est fermé");
-            }
-        }
-    }
 
     public static void main(String[] args) {
         try (DatagramSocket serverSocket = new DatagramSocket(PORT)) {
@@ -56,11 +27,27 @@ public class UDPServer {
                 // Enregistrement du pseudo
                 if (receivedMessage.startsWith("REGISTER ")) {
                     String pseudo = receivedMessage.substring(9).trim();
-                    clients.put(clientId, clientAddress);
-                    clientPorts.put(clientId, clientPort);
-                    pseudoToClient.put(pseudo, clientId);
 
-                    System.out.println("Nouveau client : " + pseudo + " (" + clientId + ")");
+                    // Vérifier si le pseudo est déjà pris
+                    if (pseudoToClient.containsKey(pseudo)) {
+                        String errorMessage = "Le pseudo \"" + pseudo + "\" est déjà utilisé. Veuillez en choisir un autre.";
+                        byte[] sendData = errorMessage.getBytes();
+                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
+                        serverSocket.send(sendPacket);
+                    } else {
+                        // Si le pseudo est disponible, enregistrer l'utilisateur
+                        clients.put(clientId, clientAddress);
+                        clientPorts.put(clientId, clientPort);
+                        pseudoToClient.put(pseudo, clientId);
+
+                        // Envoyer un message de bienvenue
+                        String welcomeMessage = "Bienvenue " + pseudo + " ! Vous êtes maintenant connecté.";
+                        byte[] sendData = welcomeMessage.getBytes();
+                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
+                        serverSocket.send(sendPacket);
+
+                        System.out.println("Nouveau client : " + pseudo + " (" + clientId + ")");
+                    }
                     continue;
                 }
 
@@ -82,11 +69,22 @@ public class UDPServer {
                     continue;
                 }
 
+                // Affichage de la liste des commandes disponibles
+                if (receivedMessage.equals("/help")) {
+                    String helpList = new String ("Commandes disponibles : \n" +
+                            "   o /list : voir les utilisateurs en ligne\n" +
+                            "   o @pseudo message : envoyer un message privé\n" +
+                            "   o /quit : se déconnecter du chat \n");
+                    byte[] sendData = helpList.getBytes();
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, clientAddress, clientPort);
+                    serverSocket.send(sendPacket);
+                    continue;
+                }
+
                 // Gestion de la déconnexion
                 if (receivedMessage.equals("/quit")) {
                     clients.remove(clientId);
                     clientPorts.remove(clientId);
-                    //pseudoToClient.values().remove(clientId);
                     pseudoToClient.entrySet().removeIf(entry -> entry.getValue().equals(clientId));
                     System.out.println("Client déconnecté : " + clientId);
                     continue;
