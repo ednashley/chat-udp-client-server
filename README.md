@@ -1,117 +1,90 @@
-# [EN] UDP Chat Application
+<h1 align="center">Chat UDP</h1>
 
-## Description
-This project implements a simple UDP-based chat application with a client-server architecture. Users can register with a unique pseudonym, send public and private messages, and view the list of connected users.
-
-## Features
-- User registration with unique pseudonym validation.
-- Public and private messaging.
-- List connected users with `/list` command.
-- Disconnect with `/quit` command.
-- Help command `/help` for available commands.
-
-## Requirements
-- Java 8 or later
-
-## Usage
-
-### Server
-1. Compile the server:
-
-    ```bash
-    javac UDPServer.java
-    ```
-
-2. Run the server:
-
-    ```bash
-    java UDPServer
-    ```
-
-### Client
-1. Compile the client:
-
-    ```bash
-    javac UDPClient.java
-    ```
-
-2. Run the client:
-
-    ```bash
-    java UDPClient
-    ```
-
-### Commands
-- `/list` : Display connected users.
-- `/help` : Show available commands.
-- `/quit` : Disconnect from the chat.
-- `@pseudo message` : Send a private message.
-
-## How It Works
-1. The client registers with a unique pseudonym.
-2. Messages are sent via UDP packets.
-3. The server manages connected clients and relays messages.
-
-## Limitation
-- No message history.
-
+<p align="center"><img src="assets/demo-chat-udp.gif" width="600" alt="Démonstration"></p>
 
 ---
 
-# [FR] Application de Chat UDP
+## Table des matières
+- [Description du projet](#description-du-projet)
+- [Technologies utilisées](#technologies-utilisées)
+- [Auteures](#auteures)
+- [Progression du projet](#progression-du-projet)
 
-## Description
-Ce projet implémente une application de chat simple basée sur UDP avec une architecture client-serveur. Les utilisateurs peuvent s'inscrire avec un pseudonyme unique, envoyer des messages publics et privés, et afficher la liste des utilisateurs connectés.
+---
 
-## Fonctionnalités
-- Inscription avec validation d'un pseudonyme unique.
-- Messagerie publique et privée.
-- Afficher les utilisateurs connectés avec la commande `/list`.
-- Se déconnecter avec la commande `/quit`.
-- Aide avec la commande `/help`.
+## Description du projet
 
-## Prérequis
-- Java 8 ou version ultérieure
+Cette application implémente un **chat basé sur le protocole UDP**, suivant une architecture **client–serveur**.
 
-## Utilisation
+Le projet a été réalisé dans un contexte **académique** (1ère année), dans le but de :
+- comprendre le fonctionnement des **communications réseau bas niveau**
+- manipuler le protocole **UDP** et ses contraintes
+- mettre en place une gestion multi-clients côté serveur
 
-### Serveur
-1. Compiler le serveur :
+Les utilisateurs peuvent s’inscrire avec un **pseudonyme unique**, envoyer des **messages publics ou privés** et interagir avec le serveur via des **commandes textuelles**.
 
-    ```bash
-    javac UDPServer.java
-    ```
+**Fonctionnalités principales :**
+- Inscription avec vérification d’un pseudonyme unique
+- Messagerie publique
+- Messagerie privée entre utilisateurs
+- Affichage de la liste des utilisateurs connectés
+- Commandes de gestion du client
 
-2. Exécuter le serveur :
+/!\ Le projet met volontairement l’accent sur la **logique réseau** plutôt que sur la persistance ou l’interface graphique.
 
-    ```bash
-    java UDPServer
-    ```
+---
 
-### Client
-1. Compiler le client :
+## Technologies utilisées
 
-    ```bash
-    javac UDPClient.java
-    ```
+| Technologie | Détails |
+|------------|--------|
+| **Langage** | Java |
+| **Outils** | Git, GitHub, IntelliJ IDEA |
 
-2. Exécuter le client :
+---
 
-    ```bash
-    java UDPClient
-    ```
+> Projet en ligne de commande : aucune interface graphique n’est utilisée.
 
-### Commandes
-- `/list` : Afficher les utilisateurs connectés.
-- `/help` : Afficher les commandes disponibles.
-- `/quit` : Se déconnecter du chat.
-- `@pseudo message` : Envoyer un message privé.
+---
 
-## Fonctionnement
-1. Le client s'inscrit avec un pseudonyme unique.
-2. Les messages sont envoyés via des paquets UDP.
-3. Le serveur gère les clients connectés et relaye les messages.
+## Auteures
 
-## Limitation
-- Pas d'historique des messages.
+- **Chafae Qallouj**  
+  Étudiante en école d’ingénieur informatique  
+  🔗 [GitHub](https://github.com/QALLOUJ)  
 
+
+- **Ashley Padayodi**  
+  Étudiante en école d’ingénieur informatique  
+  🔗 [GitHub](https://github.com/ednashley)  
+
+---
+
+## Progression du projet
+
+**Statut : Terminé**
+
+### Fonctionnalités implémentées
+- Inscription des clients via UDP
+- Gestion des pseudonymes uniques
+- Envoi de messages publics
+- Envoi de messages privés (`@pseudo message`)
+- Commandes :
+  - `/list` : afficher les utilisateurs connectés
+  - `/help` : afficher l’aide
+  - `/quit` : quitter le chat
+
+### Limitations actuelles
+- Pas d’historique des messages
+- UDP non fiable (perte possible de messages)
+- Pas de chiffrement
+- Interface uniquement en ligne de commande
+
+### Améliorations possibles
+- Ajout d’un accusé de réception des messages
+- Gestion d’un historique côté serveur
+- Interface graphique
+- Passage à TCP pour comparaison des protocoles
+- Authentification plus avancée
+
+👉 Les retours et suggestions sont les bienvenus.

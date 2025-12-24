@@ -57,7 +57,12 @@ public class UDPClient {
                         String message = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
                         // Effacer la ligne en cours pour éviter la superposition
-                        System.out.print("\r" + " ".repeat(50) + "\r");
+                        System.out.print("\r");
+                        for (int i = 0; i < 50; i++) {
+                            System.out.print(" ");
+                        }
+                        System.out.print("\r");
+
 
                         System.out.println(message);
                         System.out.print("Vous: ");
